@@ -1,3 +1,5 @@
+
+
 Basic usage
 ============
 
@@ -11,6 +13,16 @@ Basic usage
     cd examples/
     python test_controller.py   # Get test message
     python send_message.py      # Send test message (use this when test_controller working)
+
+### Dependent modules
+
+* msgpack-python (>= 0.3)
+* tornado (>= 3)
+
+
+### Required for install
+
+* pip
 
 
 Alternative usage
