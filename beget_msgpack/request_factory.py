@@ -48,6 +48,8 @@ class RequestFactory:
                                server_config['secret'])
 
         elif server_config['type'] == self.TYPE_MSGPACK:
+            if not 'port' in server_config:
+                raise ConfigError('For fcgi connection, you must set "port" in config')
             return MsgpackRequest(host, server_config['port'])
 
         else:

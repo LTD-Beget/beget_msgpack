@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .lib.response import Response
+import umsgpack
 
 
 class ResponseFactory:
@@ -20,6 +21,8 @@ class ResponseFactory:
         return Response(answer)
 
     def get_response_by_fcgi_answer(self, answer):
+        code, header, raw_answer, error = answer
+        answer = umsgpack.unpackb(raw_answer)
         return Response(answer)
 
     def get_response_by_request_error(self, code=None, description=None):

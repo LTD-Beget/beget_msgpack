@@ -11,17 +11,17 @@ except ImportError:
 package_folder = 'beget_msgpack'
 
 setup(name=package_folder,
-      version='0.2.0',
+      version='0.3.0',
       description='Client, Server by msgpackrpc and fcgi',
       author='LTD Beget',
       author_email='support@beget.ru',
       url='http://beget.ru',
       license="GPL",
-      install_requires=['msgpack-rpc-python', 'u-msgpack-python'],
+      install_requires=['msgpack-rpc-python',
+                        'u-msgpack-python'],
+
       packages=[package_folder,
                 package_folder + '.lib',
                 package_folder + '.lib.fastcgi',
-                package_folder + '.lib.msgpack'])
-
-
-# todo: добавить flup в зависимости
+                package_folder + '.lib.msgpack']
+      )

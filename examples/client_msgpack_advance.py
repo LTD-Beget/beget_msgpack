@@ -39,13 +39,13 @@ else:
 
 # utf8 examples:
 
-msg = 'Шла Саша по шоссе'
+msg = 'абвгд'
 Response = Request.request('test/test', my_arg=msg)
 answer = Response.get_method_result()
 print 'UTF8 answer by str: %s' % answer['return']
 print 'UTF8 by str compare: %s' % (msg == answer['return'])
 
-msg = u'Шла Саша по шоссе'
+msg = u'абвгд'
 Response = Request.request('test/test', my_arg=msg)
 answer = Response.get_method_result()
 print 'UTF8 answer by unicode: %s' % answer['return']

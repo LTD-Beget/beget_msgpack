@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import msgpackrpc
 import beget_msgpack
 
