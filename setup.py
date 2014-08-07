@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 try:
     from setuptools import setup
@@ -10,11 +11,17 @@ except ImportError:
 package_folder = 'beget_msgpack'
 
 setup(name=package_folder,
-      version='0.1.0',
-      description='Client, Server by msgpackrpc',
+      version='0.2.0',
+      description='Client, Server by msgpackrpc and fcgi',
       author='LTD Beget',
       author_email='support@beget.ru',
       url='http://beget.ru',
       license="GPL",
-      install_requires=['msgpack-rpc-python'],
-      packages=[package_folder])
+      install_requires=['msgpack-rpc-python', 'u-msgpack-python'],
+      packages=[package_folder,
+                package_folder + '.lib',
+                package_folder + '.lib.fastcgi',
+                package_folder + '.lib.msgpack'])
+
+
+# todo: добавить flup в зависимости

@@ -4,7 +4,7 @@ import sys
 import re
 import traceback
 from msgpackrpc.server import AsyncResult
-from response import Response
+from .lib.response import Response
 import logging
 
 
@@ -53,7 +53,7 @@ class FrontController(object):
             result.set_result(response.dump())
         except Exception as e:
             self.logger.error("%s\n%s", traceback.format_exc(), e.message)
-            response.add_request_error(Response.REQUEST_ERROR_TYPE_INTERNAL, e.message)
+            response.add_request_error(Response.REQUEST_ERROR_TYPE_UNKNOWN, e.message)
             result.set_result(response.dump())
 
         return result

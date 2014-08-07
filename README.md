@@ -57,3 +57,53 @@ from config import host, port
 beget_msgpack.Service(host, port, controllers_prefix='controllers_msgpack')
 beget_msgpack.start()
 ```
+
+
+Tutorial
+============
+
+# RequestFactory
+Используется для получения запросов независимо от транспорта который должен использоваться.
+Фабрика при инициализации получает конфиг в виде dict.
+Структура конфига:
+
+  servers = dict(
+
+    # используется по умолнчаению
+    default=dict(
+        type=TYPE_MSGPACK
+        port=60001
+    ),
+
+    # имя сервера
+    kon=dict(
+
+        # тип подключения [fcgi|msgpack]
+        type=TYPE_FCGI,
+
+        # адрес подключения. Если не указан, то используется имя сервера
+        host='kon.ru',
+
+        port='12345',
+
+        # fcgi хочет знать о файлу к которому он будет обращаться
+        script_dir='/home/path/to/proj',
+        script_name='index.php',
+
+        # политика безопасности phportal требует указывать secret при обращение по fcgi
+        secret='mySecret'
+
+        # можно указывать любые данные в конфиге. Они будет переданы классу Request где их можно обработать
+        custom_variable='some'
+    ),
+
+    sul=dict(
+        type=TYPE_MSGPACK
+    ),
+
+    # кастомное имя сервера
+    custom_name_server=dict(
+        type=TYPE_MSGPACK,
+        host='sul.ru'
+    )
+  )

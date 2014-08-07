@@ -20,14 +20,12 @@ class Controller(threading.Thread):
             self._run_action()
 
         except TypeError as e:
-            self.logger.critical("%s\n%s", e.message, traceback.format_exc())
+            self.logger.error("%s\n%s", e.message, traceback.format_exc())
             self._response.add_method_error(self._response.METHOD_ERROR_TYPE_ARGUMENT, e.message)
 
         except Exception as e:
-            self.logger.debug('Exception: %s' % repr(e))
-            self.logger.debug('Exception_dict: %s' % repr(e.__dict__))
-            self.logger.critical("%s\n%s", e.message, traceback.format_exc())
-            self._response.add_method_error(self._response.METHOD_ERROR_TYPE_INTERNAL, e.message)
+            self.logger.error("%s\n%s", e.message, traceback.format_exc())
+            self._response.add_method_error(self._response.METHOD_ERROR_TYPE_UNKNOWN, e.message)
 
         finally:
             self._result.set_result(self._response.dump())

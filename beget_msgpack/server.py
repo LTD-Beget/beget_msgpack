@@ -6,7 +6,11 @@ import traceback
 import handler
 
 
-class Service():
+class Server():
+    """
+    Msgpack сервере. Работает с контроллерами, обертка над msgpackrpc
+    """
+
     def __init__(self, host, port, controllers_prefix):
         self.controllers_prefix = controllers_prefix
         self.handler = handler.Handler(controllers_prefix)
