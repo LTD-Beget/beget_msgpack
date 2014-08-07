@@ -11,13 +11,16 @@ Basic usage
     python setup.py install
 
     cd examples/
-    python test_controller.py   # Get test message
-    python send_message.py      # Send test message (use this when test_controller working)
+    python server.py
+    python client.py
+    python client_msgpack_advance.py
 
 ### Dependent modules
 
 * msgpack-python (>= 0.3)
 * tornado (>= 3)
+* msgpack-rpc-python
+* u-msgpack-python
 
 
 ### Required for install
@@ -34,9 +37,11 @@ Installation:
 Request script:
 ```python
 import beget_msgpack
-from config import host, port
+import config  # see examples
 
-Request = beget_msgpack.Request(host, port)
+
+request_factory = beget_msgpack.RequestFactory(config)
+Request = request_factory.get_request(server)
 
 # 'controller/action' - it tells for default handler which controller and action you want to call
 # some_arg= - and all other kwarg -> send to action how arguments
