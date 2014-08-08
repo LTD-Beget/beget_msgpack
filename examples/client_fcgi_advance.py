@@ -18,6 +18,14 @@ if Response.has_error():
 else:
     print repr(Response.get_method_result())
 
+# Преобразование путей в my-test-name/my-action-test-name (Yii контроллеры):
+Response = Request.request('MyTestName/MyActionTestName', order_id='order_id_string', dump_info_params=['msg1', 'msg2'])
+
+if Response.has_error():
+    print repr(Response.get_error())
+else:
+    print repr(Response.get_method_result())
+
 
 # Проверка возвращаемых данных:
 
@@ -34,3 +42,5 @@ print_result_when_send(1)
 print_result_when_send('some')
 print_result_when_send('абвгд')  # из php+msgpack возвращает строки в unicode
 print_result_when_send(u'абвгд')
+
+

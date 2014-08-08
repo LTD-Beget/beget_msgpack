@@ -3,7 +3,7 @@
 import urllib
 import base64
 import platform
-
+import re
 import beget_msgpack
 import umsgpack
 
@@ -26,10 +26,12 @@ class Request(object):
         if len(method) != 2:
             raise Exception('method - must be in \'controller/action\' format')
 
+        controller_name = self.prepare_path_name(method[0])
+        action_name = self.prepare_path_name(method[1])
         q_params = {
-            "r": "%s/%s" % (method[0], method[1])
+            "r": "%s/%s" % (controller_name, action_name)
         }
-
+        print 'q_params: %s' % repr(q_params)
         post_params = {'secret': self.secret,
                        'inputData': base64.b64encode(umsgpack.packb(params))}
         content = urllib.urlencode(post_params)
@@ -65,3 +67,10 @@ class Request(object):
 
     def get_document_uri(self):
         return '/' + self.script
+
+    def prepare_path_name(self, name):
+        name_lowercase_first_char = name[0].lower() + name[1:]
+        return self.camel_2_dashed(name_lowercase_first_char)
+
+    def camel_2_dashed(self, string):
+        return re.sub('(((?<=[a-z])[A-Z])|([A-Z](?![A-Z]|$)))', '-\\1', string).lower()
