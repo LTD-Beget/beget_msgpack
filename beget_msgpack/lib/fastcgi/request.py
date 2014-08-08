@@ -42,6 +42,10 @@ class Request(object):
         response = response_factory.get_response_by_fcgi_answer(answer)
         return response
 
+    def do(self, method, **kwargs):
+        """alias"""
+        return self.request(method, **kwargs)
+
     def _get_cgi_params(self, q_params, content_length):
         return {
             'GATEWAY_INTERFACE': 'FastCGI/1.0',
