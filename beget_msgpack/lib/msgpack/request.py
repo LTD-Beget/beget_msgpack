@@ -24,3 +24,7 @@ class Request(object):
             response = response_factory.get_response_by_request_error(description=str(e))
 
         return response
+
+    def do(self, route, **kwargs):
+        """alias"""
+        return self.request(route, **kwargs)
