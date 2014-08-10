@@ -59,8 +59,8 @@ from config import host, port
 # 'Service' - allows you to start listening msgpack
 # controllers_prefix - specifies a prefix for controllers
 # See the examples for understanding how to location controllers.
-beget_msgpack.Service(host, port, controllers_prefix='controllers_msgpack')
-beget_msgpack.start()
+Service = beget_msgpack.Service(host, port, controllers_prefix='controllers_msgpack')
+Service.start()
 ```
 
 
