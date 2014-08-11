@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 def recursive_str_to_unicode(target):
     """
     recursive function for convert all string in dict, tuple and list to unicode

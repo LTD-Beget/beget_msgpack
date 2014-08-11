@@ -9,6 +9,7 @@ import umsgpack
 
 from .flup_fcgi_client import FCGIApp
 from ..helpers import recursive_str_to_unicode
+from ..logger import Logger
 
 
 class Request(object):
@@ -18,28 +19,45 @@ class Request(object):
         self.root = root
         self.script = script
         self.secret = secret
+        self.logger = Logger.get_logger()
 
-    def request(self, method, **kwargs):
+    def request(self, route, **kwargs):
+        self.logger.debug('fcgi->Request->request:\n'
+                          '  host: %s\n'
+                          '  port: %s\n'
+                          '  route: %s\n'
+                          '  arguments: %s\n', self.host, self.port, route, repr(kwargs))
+
         params = recursive_str_to_unicode(kwargs)
-        method = method.strip().split('/')
+        route_strip = route.strip().split('/')
 
-        if len(method) != 2:
-            raise Exception('method - must be in \'controller/action\' format')
+        if len(route_strip) != 2:
+            error_msg = 'Route: %s  But route - must be in \'controller/action\' format' % route
+            self.logger.error(error_msg)
+            raise Exception(error_msg)
 
-        controller_name = self.prepare_path_name(method[0])
-        action_name = self.prepare_path_name(method[1])
+        controller_name = self.prepare_path_name(route_strip[0])
+        action_name = self.prepare_path_name(route_strip[1])
+        self.logger.debug('fcgi->Request->request:\n'
+                          '  controller: %s\n'
+                          '  action: %s', controller_name, action_name)
         q_params = {
             "r": "%s/%s" % (controller_name, action_name)
         }
-        print 'q_params: %s' % repr(q_params)
         post_params = {'secret': self.secret,
                        'inputData': base64.b64encode(umsgpack.packb(params))}
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
         fcgi_request = FCGIApp(host=self.host, port=self.port)
+
+        self.logger.debug('Request: send:\n'
+                          '    params: %s\n'
+                          '    content: %s\n', repr(params), repr(content))
+        self.logger.info('request to: %s,  route: %s,  args:%s', self.host, route, repr(kwargs))
         answer = fcgi_request(params, content)
         response_factory = beget_msgpack.ResponseFactory()
         response = response_factory.get_response_by_fcgi_answer(answer)
+        self.logger.info('result of request: %s', response.get_method_result())
         return response
 
     def do(self, method, **kwargs):

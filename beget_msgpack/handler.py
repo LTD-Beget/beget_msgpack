@@ -5,28 +5,24 @@ import re
 import traceback
 from msgpackrpc.server import AsyncResult
 from .lib.response import Response
-import logging
+from .lib.logger import Logger
 
 
 class Handler(object):
-    def __init__(self, controllers_prefix, logger=None):
+    def __init__(self, controllers_prefix):
+        self.logger = Logger.get_logger()
         self.route = None
         self.controllers_prefix = controllers_prefix
 
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger()
-            self.logger.disabled = True
-
-    def __getattr__(self, item):
-        self.logger.debug('item: ' + repr(item))
-        self.route = item
+    def __getattr__(self, route):
+        self.logger.debug('Handler: __getattr__(%s)', repr(route))
+        self.route = route
         try:
-            front_controller = FrontController(item, self.controllers_prefix, self.logger)
+            front_controller = FrontController(route, self.controllers_prefix, self.logger)
             return front_controller.run_controller
         except Exception as e:
-            print e
+            self.logger.error('Handler: get Exception: %s\n'
+                              'Traceback: %s', e.message, traceback.format_exc())
             raise e
 
 
@@ -37,7 +33,7 @@ class FrontController(object):
         self.logger = logger
 
     def run_controller(self, args):
-        self.logger.debug('args: %s' % args)
+        self.logger.debug('FrontController: get args: %s', repr(args))
         response = Response()
         result = AsyncResult()
 
@@ -48,11 +44,11 @@ class FrontController(object):
             controller = controller_cls(action, method_args, result, self.logger, response)
             controller.start()
         except (ParseParamsError, ParseRouteError) as e:
-            self.logger.error(e.message)
             response.add_request_error(Response.REQUEST_ERROR_BAD_REQUEST, e.message)
             result.set_result(response.dump())
         except Exception as e:
-            self.logger.error("%s\n%s", traceback.format_exc(), e.message)
+            self.logger.error('FrontController: Exception: %s\n'
+                              '  Traceback: %s', e.message, traceback.format_exc())
             response.add_request_error(Response.REQUEST_ERROR_TYPE_UNKNOWN, e.message)
             result.set_result(response.dump())
 
@@ -63,11 +59,20 @@ class FrontController(object):
             (cls, action) = self.route.split("/")
             controller_module = self._from_camelcase_to_underscore(cls) + "_controller"
             controller_cls = cls[0].title() + cls[1:] + "Controller"
-            a = sys.modules['%s.%s' % (self.controllers_prefix, controller_module)]
+            module_name = '%s.%s' % (self.controllers_prefix, controller_module)
+            self.logger.debug('FrontController: \n'
+                              '  module controller: %s\n'
+                              '  class controller: %s\n'
+                              '  action in controller: %s', module_name, controller_cls, action)
+            module_obj = sys.modules[module_name]
 
-            return getattr(a, controller_cls), action
+            return getattr(module_obj, controller_cls), action
         except Exception as e:
-            raise ParseRouteError("Failed to parse route or get controller. given: %s" % self.route)
+            error_msg = "Failed to parse route or get controller. given: %s" % self.route
+            self.logger.error('FrontController: %s\n'
+                              '  Exception: %s\n'
+                              '  Traceback: %s', error_msg, e.message, traceback.format_exc())
+            raise ParseRouteError(error_msg)
 
     def _parse_params(self, params):
         return params

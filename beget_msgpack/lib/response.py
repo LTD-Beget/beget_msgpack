@@ -40,6 +40,8 @@
 #             [1]:'text message'
 #
 
+from .logger import Logger
+
 
 class Response():
 
@@ -63,6 +65,8 @@ class Response():
         self.method_status = self.STATUS_SUCCESS
         self.method_result = None
         self.method_errors = {}
+
+        self.logger = Logger.get_logger()
 
         if type(answer) is dict:
             self.load(answer)
@@ -92,7 +96,12 @@ class Response():
             }
 
     def load(self, answer):
+        self.logger.debug('Response: load answer:%s', answer)
+
         if 'status' not in answer:
+            error_msg = "Answer must contains a 'status' key"
+            self.logger.error('%s\n'
+                              '  Answer:%s', error_msg, answer)
             raise StandardError("Answer must contains a 'status' key")
 
         self.request_status = answer['status']
@@ -103,7 +112,10 @@ class Response():
     def _load_method_result(self, answer):
         if not self.has_request_error():
             if 'answer' not in answer:
-                raise StandardError("Answer must contains a 'answer' key")
+                error_msg = "Answer must contains a 'answer' key"
+                self.logger.error('%s\n'
+                                  '  Answer:%s', error_msg, answer)
+                raise StandardError(error_msg)
 
             method_answer = answer['answer']
             self.method_status = method_answer.get("status", self.STATUS_SUCCESS)

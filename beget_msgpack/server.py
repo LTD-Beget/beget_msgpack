@@ -4,6 +4,7 @@ import msgpackrpc
 import signal
 import traceback
 import handler
+from lib.logger import Logger
 
 
 class Server():
@@ -11,7 +12,8 @@ class Server():
     Msgpack сервере. Работает с контроллерами, обертка над msgpackrpc
     """
 
-    def __init__(self, host, port, controllers_prefix):
+    def __init__(self, host, port, controllers_prefix, logger_name=None):
+        self.logger = Logger.get_logger(logger_name)
         self.controllers_prefix = controllers_prefix
         self.handler = handler.Handler(controllers_prefix)
         self.host = str(host)
@@ -22,7 +24,7 @@ class Server():
             server = msgpackrpc.Server(self.handler)
 
             def stop(num, stackframe):
-                print "Got SIGTERM|SIGINT. Bye!"
+                self.logger.critical("Server: get signal %s and stop", num)
                 server.close()
                 server.stop()
                 exit(0)
@@ -30,9 +32,9 @@ class Server():
             signal.signal(signal.SIGTERM, stop)
             signal.signal(signal.SIGINT, stop)
 
-            print 'listen: %s:%s' % (self.host, self.port)
+            self.logger.info('Server: listen: %s:%s', self.host, self.port)
             server.listen(msgpackrpc.Address(self.host, self.port))
             server.start()
         except Exception as e:
-            print "Got an exception: %s" % e.message
-            print traceback.format_exc()
+            self.logger.error('Server: get exception: %s\n'
+                              'traceback: %s', e.message, traceback.format_exc())
