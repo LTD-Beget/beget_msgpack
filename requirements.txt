@@ -1,2 +1,2 @@
-msgpack-rpc-python
 u-msgpack-python
+git+https://github.com/LTD-Beget/msgpack-rpc-python

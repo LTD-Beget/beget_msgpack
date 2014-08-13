@@ -20,6 +20,10 @@ setup(name=package_folder,
       install_requires=['msgpack-rpc-python',
                         'u-msgpack-python'],
 
+      dependency_links=[
+          'http://github.com/LTD-Beget/msgpack-rpc-python/tarball/master#egg=msgpack-rpc-python',
+      ],
+
       packages=[package_folder,
                 package_folder + '.lib',
                 package_folder + '.lib.fastcgi',
