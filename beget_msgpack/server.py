@@ -4,6 +4,7 @@ import msgpackrpc
 import signal
 import traceback
 import handler
+import socket
 from lib.logger import Logger
 
 
@@ -33,7 +34,7 @@ class Server():
             signal.signal(signal.SIGINT, stop)
 
             self.logger.info('Server: listen: %s:%s', self.host, self.port)
-            server.listen(msgpackrpc.Address(self.host, self.port))
+            server.listen(msgpackrpc.Address(self.host, self.port, socket.AF_INET))
             server.start()
         except Exception as e:
             self.logger.error('Server: get exception: %s\n'

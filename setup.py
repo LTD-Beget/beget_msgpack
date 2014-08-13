@@ -11,7 +11,7 @@ except ImportError:
 package_folder = 'beget_msgpack'
 
 setup(name=package_folder,
-      version='0.3.4',
+      version='0.3.5',
       description='Client, Server by msgpackrpc and fcgi',
       author='LTD Beget',
       author_email='support@beget.ru',
@@ -19,6 +19,10 @@ setup(name=package_folder,
       license="GPL",
       install_requires=['msgpack-rpc-python',
                         'u-msgpack-python'],
+
+      dependency_links=[
+          'http://github.com/LTD-Beget/msgpack-rpc-python/tarball/master#egg=msgpack-rpc-python',
+      ],
 
       packages=[package_folder,
                 package_folder + '.lib',
