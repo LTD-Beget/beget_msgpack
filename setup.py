@@ -27,5 +27,6 @@ setup(name=package_folder,
                 package_folder + '.lib',
                 package_folder + '.lib.fastcgi',
                 package_folder + '.lib.msgpack',
-                package_folder + '.lib.errors']
+                package_folder + '.lib.errors',
+                package_folder + '.lib.errors.types']
       )
