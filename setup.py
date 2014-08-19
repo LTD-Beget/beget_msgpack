@@ -17,8 +17,7 @@ setup(name=package_folder,
       author_email='support@beget.ru',
       url='http://beget.ru',
       license="GPL",
-      install_requires=['msgpack-rpc-python',
-                        'u-msgpack-python'],
+      install_requires=['msgpack-rpc-python'],
 
       dependency_links=[
           'http://github.com/LTD-Beget/msgpack-rpc-python/tarball/master#egg=msgpack-rpc-python',

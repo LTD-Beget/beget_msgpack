@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .lib.response import Response
-import umsgpack
+import msgpack
 from .lib.logger import Logger
 
 
@@ -26,7 +26,7 @@ class ResponseFactory:
     def get_response_by_fcgi_answer(self, answer):
         self.logger.debug('ResponseFactory->by_fcgi: get answer: %s', repr(answer))
         code, header, raw_answer, error = answer
-        answer_unpack = umsgpack.unpackb(raw_answer)
+        answer_unpack = msgpack.unpackb(raw_answer)
         self.logger.debug('ResponseFactory->by_fcgi: change it to: %s', repr(answer_unpack))
         return Response(answer_unpack)
 

@@ -8,7 +8,7 @@ import traceback
 import socket
 
 import beget_msgpack
-import umsgpack
+import msgpack
 
 from .flup_fcgi_client import FCGIApp
 from ..helpers import recursive_str_to_unicode
@@ -48,7 +48,7 @@ class Request(object):
             "r": "%s/%s" % (controller_name, action_name)
         }
         post_params = {'secret': self.secret,
-                       'inputData': base64.b64encode(umsgpack.packb(params))}
+                       'inputData': base64.b64encode(msgpack.packb(params))}
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
         fcgi_request = FCGIApp(host=self.host, port=self.port)

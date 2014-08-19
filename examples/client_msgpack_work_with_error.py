@@ -94,7 +94,7 @@ work_with_response(response)  # Get request error: ErrorConnection
                               # with message: Retry connection over the limit
 
 
-Request = request_factory.get_request('kondr')
+Request = request_factory.get_request('kon')
 
 
 print '\n\n----------\nError fcgi with missing controller:\n'
