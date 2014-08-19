@@ -30,17 +30,26 @@
 #
 ############
 #
-# Структура данных при ошибке в запросе:
+# Структура данных при ошибке в запросе:  (Такая же структура как в ошибке метода, но на один уровень выше к корню)
 # status: 'error'
-# answer:
-#     status: 'error'
-#     error:       # обратить внимание, что тут error в единственном числе
-#         [0]:      # а тут может быть только одна ошибка
-#             [0]:'error message'
-#             [1]:'text message'
+# errors:
+#     TYPE_FIRST: # Тип ошибки. Строка харкодится в коде. В phportal, на ее основе возвращаются разные типы ошибок.
+#        [0]:
+#            [0]:'error message'
+#            [1]:'error code'
+#
+#        [1]:     # Для одного типа ошибок, может быть несколько самих ошибок
+#            [0]:'error message'
+#            [1]:'error code'
+#     TYPE_SECOND: # может быть несколько типов ошибок
+#        [0]:
+#            [0]:'error message'
+#            [1]:'error code'
+#
 #
 
 from .logger import Logger
+from .errors.error_collection import ErrorCollection
 
 
 class Response():
@@ -48,19 +57,11 @@ class Response():
     STATUS_SUCCESS = "success"
     STATUS_ERROR = "error"
 
-    # Случайное число которое не встречается в проекте
     DEFAULT_ERROR_CODE = 45689
-
-    # типы ошибок:
-    REQUEST_ERROR_BAD_REQUEST = "BAD_REQUEST"   # неизвестный module.controller/action
-    REQUEST_ERROR_TYPE_UNKNOWN = "UNKNOWN_ERROR_REQUEST"  # во всех остальных случаях
-
-    METHOD_ERROR_TYPE_ARGUMENT = "ARGUMENT_ERROR"  # переданы неправильные аргументы
-    METHOD_ERROR_TYPE_UNKNOWN = "UNKNOWN_ERROR"  # во всех остальных случаях
 
     def __init__(self, answer=None):
         self.request_status = self.STATUS_SUCCESS
-        self.request_error = None
+        self.request_errors = {}
 
         self.method_status = self.STATUS_SUCCESS
         self.method_result = None
@@ -74,12 +75,12 @@ class Response():
     def dump(self):
         if self.has_request_error():
             return {
-                "status": self.request_status,
-                "error": self.request_error
+                "status": self.STATUS_ERROR,
+                "errors": self.request_errors
             }
         else:
             return {
-                "status": self.request_status,
+                "status": self.STATUS_SUCCESS,
                 "answer": self._dump_method_answer()
             }
 
@@ -105,7 +106,7 @@ class Response():
             raise StandardError("Answer must contains a 'status' key")
 
         self.request_status = answer['status']
-        self.request_error = answer.get("error")
+        self.request_errors = answer.get("errors", {})
 
         self._load_method_result(answer)
 
@@ -132,7 +133,7 @@ class Response():
         return self.has_request_error() or self.has_method_errors()
 
     def has_request_error(self):
-        return self.request_status == self.STATUS_ERROR
+        return len(self.request_errors) > 0
 
     def has_method_errors(self):
         return len(self.method_errors) > 0
@@ -141,14 +142,23 @@ class Response():
         return self.get_request_error() or self.get_method_error()
 
     def get_request_error(self):
-        return self.request_error if self.has_request_error() else None
+        return ErrorCollection.create_by_dict(self.request_errors) if self.has_request_error() else None
 
     def get_method_error(self):
-        return self.method_errors if self.has_method_errors() else None
+        return ErrorCollection.create_by_dict(self.method_errors) if self.has_method_errors() else None
 
-    def add_request_error(self, code, description):
+    ################################################################################
+    # Добавление информации об ошибках
+
+    def add_request_error(self, type_error, msg, code=None):
+        if code is None:
+            code = self.DEFAULT_ERROR_CODE
+
         self.request_status = self.STATUS_ERROR
-        self.request_error = code, description
+        if type_error not in self.method_errors:
+            self.request_errors[type_error] = [[msg, code]]
+        else:
+            self.request_errors[type_error].append([msg, code])
 
     def add_method_error(self, type_error, msg, code=None):
         if code is None:
@@ -159,4 +169,3 @@ class Response():
             self.method_errors[type_error] = [[msg, code]]
         else:
             self.method_errors[type_error].append([msg, code])
-

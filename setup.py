@@ -11,7 +11,7 @@ except ImportError:
 package_folder = 'beget_msgpack'
 
 setup(name=package_folder,
-      version='0.3.5',
+      version='0.3.6',
       description='Client, Server by msgpackrpc and fcgi',
       author='LTD Beget',
       author_email='support@beget.ru',
@@ -27,5 +27,6 @@ setup(name=package_folder,
       packages=[package_folder,
                 package_folder + '.lib',
                 package_folder + '.lib.fastcgi',
-                package_folder + '.lib.msgpack']
+                package_folder + '.lib.msgpack',
+                package_folder + '.lib.errors']
       )

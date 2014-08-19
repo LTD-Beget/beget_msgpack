@@ -4,12 +4,16 @@ import urllib
 import base64
 import platform
 import re
+import traceback
+import socket
+
 import beget_msgpack
 import umsgpack
 
 from .flup_fcgi_client import FCGIApp
 from ..helpers import recursive_str_to_unicode
 from ..logger import Logger
+from ..errors.error_constructor import ErrorConstructor
 
 
 class Request(object):
@@ -27,7 +31,6 @@ class Request(object):
                           '  port: %s\n'
                           '  route: %s\n'
                           '  arguments: %s\n', self.host, self.port, route, repr(kwargs))
-
         params = recursive_str_to_unicode(kwargs)
         route_strip = route.strip().split('/')
 
@@ -49,14 +52,18 @@ class Request(object):
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
         fcgi_request = FCGIApp(host=self.host, port=self.port)
-
-        self.logger.debug('Request: send:\n'
-                          '    params: %s\n'
-                          '    content: %s\n', repr(params), repr(content))
-        self.logger.info('request to: %s,  route: %s,  args:%s', self.host, route, repr(kwargs))
-        answer = fcgi_request(params, content)
         response_factory = beget_msgpack.ResponseFactory()
-        response = response_factory.get_response_by_fcgi_answer(answer)
+        self.logger.debug('Request: send:\n    params: %s\n    content: %s\n', repr(params), repr(content))
+        self.logger.info('request to: %s,  route: %s,  args:%s', self.host, route, repr(kwargs))
+        try:
+            answer = fcgi_request(params, content)
+            response = response_factory.get_response_by_fcgi_answer(answer)
+        except (socket.gaierror, socket.error) as e:
+            self.logger.error('msgpack->Request: Exception: Can\'t connect: %s\n'
+                              '  %s', e.message, traceback.format_exc())
+            response = response_factory.get_response_by_request_error(ErrorConstructor.TYPE_ERROR_CONNECTION,
+                                                                      str(e),
+                                                                      ErrorConstructor.CODE_ERROR_CONNECTION)
         self.logger.info('result of request: %s', response.get_method_result())
         return response
 
