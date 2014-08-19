@@ -67,7 +67,7 @@ class RequestFactory:
 
         elif server_config['type'] == self.TYPE_MSGPACK:
             if not 'port' in server_config:
-                error_msg = 'RequestFactory: For fcgi connection, you must set "port" in config'
+                error_msg = 'RequestFactory: For msgpack connection, you must set "port" in config'
                 self.logger.critical(error_msg)
                 raise ConfigError(error_msg)
             self.logger.debug('RequestFactory: return msgpack request')
