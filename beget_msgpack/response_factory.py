@@ -42,7 +42,7 @@ class ResponseFactory:
         except msgpack.exceptions.ExtraData:
             self.logger.error('ResponseFactory->by_fcgi: msgpack could not unpack answer')
             return self.get_response_by_request_error(ErrorConstructor.TYPE_ERROR_UNKNOWN,
-                                                      answer,
+                                                      raw_answer,
                                                       ErrorConstructor.CODE_ERROR_UNKNOWN)
 
         self.logger.debug('ResponseFactory:by_fcgi: change it to: %s', repr(answer_unpack))
