@@ -4,7 +4,7 @@ import logging
 
 class Logger():
 
-    logger_name = 'beget_msgpack'
+    logger_name = 'beget.msgpack'
 
     def __init__(self):
         pass
