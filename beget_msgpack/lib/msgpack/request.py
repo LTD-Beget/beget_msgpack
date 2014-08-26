@@ -15,6 +15,11 @@ class Request(object):
         self.host = str(host)
         self.port = int(port)
         self.logger = Logger.get_logger()
+        self.timeout = 30
+
+    def set_timeout(self, sec_int):
+        assert isinstance(sec_int, int)
+        self.timeout = sec_int
 
     def request(self, route, **kwargs):
         """
@@ -36,7 +41,7 @@ class Request(object):
         response_factory = beget_msgpack.ResponseFactory()
 
         try:
-            client = msgpackrpc.Client(msgpackrpc.Address(self.host, self.port))
+            client = msgpackrpc.Client(msgpackrpc.Address(self.host, self.port), timeout=self.timeout)
             self.logger.info('request to: %s,  route: %s,  args:%s', self.host, route, repr(kwargs))
             answer = client.call(route, kwargs)
             self.logger.debug('msgpack->Request: get answer: %s', answer)

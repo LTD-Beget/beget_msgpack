@@ -23,8 +23,8 @@ Request = request_factory.get_request(server)
 # (Действия дальше идентичны для любого реквеста возврващаемого из фабрики)
 # Делаем реквест с указанием контроллера/экшена и аргументов
 # Response = Request.request('myControllerName/myActionName', my_arg='myMsg')
+Request.set_timeout(40)
 Response = Request.request('test/test', my_arg='myMsg')
-
 # Из реквеста получаем Response
 if Response.has_error():
     print repr(Response.get_error())

@@ -24,6 +24,12 @@ class Request(object):
         self.script = script
         self.secret = secret
         self.logger = Logger.get_logger()
+        self.timeout = 30
+
+    def set_timeout(self, sec_int):
+        #TODO: реализовать
+        assert isinstance(sec_int, int)
+        self.timeout = sec_int
 
     def request(self, route, **kwargs):
         self.logger.debug('fcgi->Request->request:\n'
