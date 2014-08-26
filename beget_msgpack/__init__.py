@@ -5,3 +5,4 @@ from .controller import Controller
 from .handler import Handler
 from .lib.logger import Logger
 
+from ._version import __version__
