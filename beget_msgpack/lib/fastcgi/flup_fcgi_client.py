@@ -262,21 +262,31 @@ class Record(object):
 
 class FCGIApp(object):
 
-    def __init__(self, connect=None, host=None, port=None, filterEnviron=True):
+    def __init__(self, connect=None, host=None, port=None, filterEnviron=True, timeout=None):
         if host is not None:
             assert port is not None
             connect=(host, port)
 
         self._connect = connect
         self._filterEnviron = filterEnviron
+        self._timeout = timeout
 
-    def __call__(self, environ, stdin, start_response=None):
+    def __call__(self, environ, stdin, start_response=None, timeout=None):
+        """
+        :raises: EOFError if the timeout is exceeded
+        """
         # For sanity's sake, we don't care about FCGI_MPXS_CONN
         # (connection multiplexing). For every request, we obtain a new
         # transport socket, perform the request, then discard the socket.
         # This is, I believe, how mod_fastcgi does things...
 
-        sock = self._getConnection()
+        timeout_receive = 0
+        if isinstance(timeout, (int, float)) and timeout > 0:
+            timeout_receive = timeout
+        elif isinstance(self._timeout, (int, float)) and self._timeout > 0:
+            timeout_receive = self._timeout
+
+        sock = self._getConnection(timeout_receive)
 
         # Since this is going to be the only request on this connection,
         # set the request ID to 1.
@@ -384,7 +394,7 @@ class FCGIApp(object):
 
         return status, headers, result, err
 
-    def _getConnection(self):
+    def _getConnection(self, timeout=0):
         if self._connect is not None:
             # The simple case. Create a socket and connect to the
             # application.
@@ -396,6 +406,9 @@ class FCGIApp(object):
             else:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect(self._connect)
+
+            if timeout > 0:
+                sock.settimeout(timeout)
             return sock
 
         # To be done when I have more time...

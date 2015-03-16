@@ -17,18 +17,17 @@ from ..errors.error_constructor import ErrorConstructor
 
 
 class Request(object):
-    def __init__(self, host, port, root, script, secret):
+    def __init__(self, host, port, root, script, secret, timeout=None):
         self.host = host
         self.port = int(port)
         self.root = root
         self.script = script
         self.secret = secret
         self.logger = Logger.get_logger()
-        self.timeout = 30
+        self.timeout = timeout
 
     def set_timeout(self, sec_int):
-        #TODO: реализовать
-        assert isinstance(sec_int, int)
+        assert isinstance(sec_int, (int, float))
         self.timeout = sec_int
 
     def request(self, route, **kwargs):
@@ -57,7 +56,7 @@ class Request(object):
                        'inputData': base64.b64encode(msgpack.packb(params))}
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
-        fcgi_request = FCGIApp(host=self.host, port=self.port)
+        fcgi_request = FCGIApp(host=self.host, port=self.port, timeout=self.timeout)
         response_factory = beget_msgpack.ResponseFactory()
         self.logger.debug('Request: send:\n    params: %s\n    content: %s\n', repr(params), repr(content))
         self.logger.info('request to: %s,  route: %s,  args:%s', self.host, route, repr(kwargs))
