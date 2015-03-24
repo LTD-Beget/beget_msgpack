@@ -36,7 +36,7 @@ class Request(object):
                           '  port: %s\n'
                           '  route: %s\n'
                           '  arguments: %s\n', self.host, self.port, route, repr(kwargs))
-        params = recursive_str_to_unicode(kwargs)
+
         route_strip = route.strip().split('/')
 
         if len(route_strip) != 2:
@@ -53,7 +53,7 @@ class Request(object):
             "r": "%s/%s" % (controller_name, action_name)
         }
         post_params = {'secret': self.secret,
-                       'inputData': base64.b64encode(msgpack.packb(params))}
+                       'inputData': base64.b64encode(msgpack.packb(kwargs))}
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
         fcgi_request = FCGIApp(host=self.host, port=self.port, timeout=self.timeout)
