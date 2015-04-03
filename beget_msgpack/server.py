@@ -15,7 +15,6 @@ class Server():
     """
 
     def __init__(self, host, port, controllers_prefix, logger_name=None):
-        print '==================   my msgpack'
         self.logger = Logger.get_logger(logger_name)
         self.controllers_prefix = controllers_prefix
         self.handler = handler.Handler(controllers_prefix)
