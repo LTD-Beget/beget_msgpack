@@ -5,6 +5,7 @@ import signal
 import traceback
 import handler
 import socket
+import sys
 from lib.logger import Logger
 
 
@@ -14,6 +15,7 @@ class Server():
     """
 
     def __init__(self, host, port, controllers_prefix, logger_name=None):
+        print '==================   my msgpack'
         self.logger = Logger.get_logger(logger_name)
         self.controllers_prefix = controllers_prefix
         self.handler = handler.Handler(controllers_prefix)
@@ -26,9 +28,16 @@ class Server():
 
             def stop(num, stackframe):
                 self.logger.critical("Server: get signal %s and stop", num)
-                server.close()
-                server.stop()
-                exit(0)
+
+                try:
+                    server.close()
+                    self.logger.critical("Server: after close")
+                    server.stop()
+                    self.logger.critical("Server: after stop")
+                except Exception as e:
+                    self.logger.error("Error on msgpackrpc server stop: %s\n %s", e.message, traceback.format_exc())
+
+                sys.exit()
 
             signal.signal(signal.SIGTERM, stop)
             signal.signal(signal.SIGINT, stop)

@@ -16,7 +16,7 @@ class Controller(threading.Thread):
 
     def __init__(self, action_name, method_args, result, logger, response):
         threading.Thread.__init__(self)
-
+        self.daemon = True
         self.action_name = action_name
         self.logger = logger
 
@@ -25,7 +25,6 @@ class Controller(threading.Thread):
         self._result = result
 
     def run(self):
-
         # Получаем имя экшена
         action_name = "action_%s" % self.action_name
         self.logger.debug('Controller: \n'
@@ -60,3 +59,5 @@ class Controller(threading.Thread):
 
         # Записываем результат выполнения
         self._result.set_result(self._response.dump())
+
+
