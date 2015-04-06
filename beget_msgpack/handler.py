@@ -1,41 +1,81 @@
 # -*- coding: utf-8 -*-
 
+import select
 import sys
 import re
 import traceback
-from msgpackrpc.server import AsyncResult
-from .lib.response import Response
+import msgpack
+
+import preforkserver as pfs
+
 from .lib.logger import Logger
+from .lib.response import Response
 from .lib.errors.error_constructor import ErrorConstructor
 
 
-class Handler(object):
+class Handler(pfs.BaseChild):
     """
-    обработчик для msgpackrpc.Server
-    Каждый раз когда msgpackrpc.Server получает сообщение, он его передает в то, что вернет __getattr__ этого класса
+    Класс который обслуживает коннект. Является форком по средством prefork библиотеки
     """
 
-    def __init__(self, controllers_prefix):
+    def initialize(self, controllers_prefix, timeout_receive=5):
         """
-        :param controllers_prefix: имя пакета (префикс) где будут искаться контроллеры
-        :type controllers_prefix: str
+        Кастомный __init__ от библиотеки prefork
         """
-        self.logger = Logger.get_logger()
         self.controllers_prefix = controllers_prefix
+        self.logger = Logger.get_logger()
+        self.packer = msgpack.Packer(default=lambda x: x.to_msgpack())
+        self.unpacker = msgpack.Unpacker()
+        self.response = Response()
+        self.timeout_receive = timeout_receive
 
-    def __getattr__(self, route):
+    def process_request(self):
         """
-        :param route: получает путь к экшену в виде 'controller/action'
-        :type route: str
+        Обработчик запроса (когда происходит передача данных на сервер)
         """
-        self.logger.debug('Handler: __getattr__(%s)', repr(route))
         try:
-            front_controller = FrontController(route, self.controllers_prefix, self.logger)
-            return front_controller.run_controller
+
+            # Получаем все данные из сокета
+            message = ''
+            data = ''
+            while True:
+
+                # Устанавливаем таймаут на получение данных из сокета
+                ready = select.select([self.conn], [], [], self.timeout_receive)
+                if ready[0]:
+                    data_buffer = self.conn.recv(4096)
+                else:
+                    raise Exception('Exceeded timeout')
+
+                # msgpack-rpc не завершает данные EOF, поэтому через not data мы не выйдем
+                if not data_buffer:
+                    raise Exception('Only for MessagePack')
+
+                data += data_buffer
+
+                try:
+                    # Выходим если получилось декодировать, иначе продолжаем ожидать данные
+                    message = msgpack.unpackb(data)
+                    break
+                except:
+                    pass
+
+            self.on_message(message)
+
         except Exception as e:
-            self.logger.error('Handler: get Exception: %s\n'
-                              'Traceback: %s', e.message, traceback.format_exc())
-            raise e
+            #Выброс ошибки выше, влечен проблемы с воркерами
+            self.logger.error('Handler: get Exception: %s\n  Traceback: %s', e.message, traceback.format_exc())
+
+    def on_message(self, message):
+        route = message[2]
+        arguments = message[3][0]
+        self.logger.debug('Handler: \n  Route: %s\n  Arguments: %s', repr(route), repr(arguments))
+
+        front_controller = FrontController(route, self.controllers_prefix, self.logger)
+        result = front_controller.run_controller(arguments)
+
+        result_encoded = self.packer.pack([1, 0, None, result])
+        self.conn.sendall(result_encoded)
 
 
 class FrontController(object):
@@ -63,11 +103,7 @@ class FrontController(object):
         :param action_args: получает dict аргументов или пустой dict
         :type action_args: dict
         """
-
-        self.logger.debug('FrontController: get args: %s', repr(action_args))
-
         response = Response()
-        result = AsyncResult()
 
         # Ищем вызываемый контроллер
         try:
@@ -88,19 +124,18 @@ class FrontController(object):
             self.logger.error('FrontController: %s\n  Exception: %s\n'
                               '  Traceback: %s', error_msg, e.message, traceback.format_exc())
             response.add_request_error(ErrorConstructor.TYPE_ERROR_BAD_REQUEST, error_msg)
-            result.set_result(response.dump())
-            return result
+            return response.dump()
 
         # Вызываем контроллер и передаем ему необходимыем параметры
         try:
-            controller = controller_class(action, action_args, result, self.logger, response)
-            controller.start()
+            controller = controller_class(action, action_args, self.logger, response)
+            result = controller.start()
+            return result
 
         except Exception as e:
             self.logger.error('FrontController: Exception: %s\n  Traceback: %s', e.message, traceback.format_exc())
             response.add_request_error(ErrorConstructor.TYPE_ERROR_UNKNOWN, e.message)
-            result.set_result(response.dump())
-        return result
+        return response.dump()
 
     @staticmethod
     def _from_camelcase_to_underscore(string):

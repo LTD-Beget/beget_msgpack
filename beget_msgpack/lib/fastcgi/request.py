@@ -11,7 +11,6 @@ import beget_msgpack
 import msgpack
 
 from .flup_fcgi_client import FCGIApp
-from ..helpers import recursive_str_to_unicode
 from ..logger import Logger
 from ..errors.error_constructor import ErrorConstructor
 
