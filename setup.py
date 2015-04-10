@@ -25,6 +25,7 @@ setup(name=package_folder,
 
       dependency_links=[
           'http://github.com/LTD-Beget/msgpack-rpc-python/tarball/master#egg=msgpack-rpc-python',
+          'http://github.com/LTD-Beget/py-prefork-server/tarball/master#egg=py-prefork-server',
       ],
 
       packages=[package_folder,
