@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import threading
 import traceback
 from .lib.errors.error_constructor import ErrorConstructor
 
 
-class Controller(threading.Thread):
+class Controller():
     """
     Его следует наследовать в ваших контроллерах.
     Он предоставляет:
@@ -14,15 +13,15 @@ class Controller(threading.Thread):
       - обработку стандартных ошибок
     """
 
-    def __init__(self, action_name, method_args, result, logger, response):
-        threading.Thread.__init__(self)
-        self.daemon = True
+    def __init__(self, action_name, method_args, logger, response):
         self.action_name = action_name
         self.logger = logger
 
         self._response = response
         self._method_args = method_args
-        self._result = result
+
+    def start(self):
+        return self.run()
 
     def run(self):
         # Получаем имя экшена
@@ -38,8 +37,7 @@ class Controller(threading.Thread):
             error_message = "missing action %s" % action_name
             self.logger.error("Controller Exception: %s\n  %s", error_message, traceback.format_exc())
             self._response.add_request_error(ErrorConstructor.TYPE_ERROR_BAD_REQUEST, error_message)
-            self._result.set_result(self._response.dump())
-            return
+            return self._response.dump()
 
         # Вызываем метод передавая необходимые параметры
         try:
@@ -58,6 +56,4 @@ class Controller(threading.Thread):
             self._response.add_method_error(ErrorConstructor.TYPE_ERROR_IN_ACTION, e.message)
 
         # Записываем результат выполнения
-        self._result.set_result(self._response.dump())
-
-
+        return self._response.dump()

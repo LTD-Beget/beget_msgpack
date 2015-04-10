@@ -6,6 +6,7 @@ from .lib.logger import Logger
 from .lib.response import Response
 from .lib.errors.error_constructor import ErrorConstructor
 
+
 class ResponseFactory:
     """
     Класс для конструкции одного Response из разнообразных форматов:
