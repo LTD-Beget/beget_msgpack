@@ -14,7 +14,7 @@ class Server():
     """
 
     def __init__(self, host, port, controllers_prefix, max_servers=20, min_servers=5, min_spare_servers=2,
-                 max_spare_servers=10, reuse_port=False, timeout_receive=5, logger_name=None):
+                 max_spare_servers=10, reuse_port=True, timeout_receive=5, logger_name=None):
         self.logger = Logger.get_logger(logger_name)
         self.controllers_prefix = controllers_prefix
 
