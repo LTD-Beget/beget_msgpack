@@ -21,11 +21,11 @@ setup(name=package_folder,
       author_email='support@beget.ru',
       url='http://beget.ru',
       license="GPL",
-      install_requires=['msgpack-rpc-python', 'py-prefork-server'],
+      install_requires=['msgpack-rpc-python', 'py-prefork-server >= 0.4.1'],
 
       dependency_links=[
           'http://github.com/LTD-Beget/msgpack-rpc-python/tarball/master#egg=msgpack-rpc-python',
-          'http://github.com/LTD-Beget/py-prefork-server/tarball/master#egg=py-prefork-server',
+          'http://github.com/LTD-Beget/py-prefork-server/tarball/master#egg=py-prefork-server-0.4.1',
       ],
 
       packages=[package_folder,
