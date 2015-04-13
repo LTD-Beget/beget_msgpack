@@ -154,6 +154,10 @@ class Response():
         if code is None:
             code = self.DEFAULT_ERROR_CODE
 
+        if not isinstance(msg, basestring):
+            self.logger.debug('Error msg is not a string. Representation it: %s', repr(msg))
+            msg = repr(msg)
+
         self.request_status = self.STATUS_ERROR
         if type_error not in self.method_errors:
             self.request_errors[type_error] = [[msg, code]]
@@ -163,6 +167,10 @@ class Response():
     def add_method_error(self, type_error, msg, code=None):
         if code is None:
             code = self.DEFAULT_ERROR_CODE
+
+        if not isinstance(msg, basestring):
+            self.logger.debug('Error msg is not a string. Representation it: %s', repr(msg))
+            msg = repr(msg)
 
         self.method_status = self.STATUS_ERROR
         if type_error not in self.method_errors:
