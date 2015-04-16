@@ -5,6 +5,7 @@ import sys
 import re
 import traceback
 import msgpack
+import time
 
 import preforkserver as pfs
 
@@ -33,8 +34,13 @@ class Handler(pfs.BaseChild):
         """
         Обработчик запроса (когда происходит передача данных на сервер)
         """
-        try:
 
+        time_start = time.time()
+
+        if hasattr(self.logger, 'request_id_generate') and callable(self.logger.request_id_generate):
+            self.logger.request_id_generate()
+
+        try:
             # Получаем все данные из сокета
             message = ''
             data = ''
@@ -66,6 +72,12 @@ class Handler(pfs.BaseChild):
             #Выброс ошибки выше, влечен проблемы с воркерами
             self.logger.error('Handler: get Exception: %s\n  Traceback: %s', e.message, traceback.format_exc())
 
+        time_end = time.time()
+        self.logger.debug('Request completed in seconds: %s', time_end - time_start)
+
+        if hasattr(self.logger, 'request_id_clear') and callable(self.logger.request_id_clear):
+            self.logger.request_id_clear()
+
     def on_message(self, message):
         route = message[2]
         arguments = message[3][0]
@@ -76,6 +88,10 @@ class Handler(pfs.BaseChild):
 
         result_encoded = self.packer.pack([1, 0, None, result])
         self.conn.sendall(result_encoded)
+
+    def log(self, msg):
+        if hasattr(self, 'logger'):
+            self.logger.debug(msg)
 
 
 class FrontController(object):
