@@ -14,11 +14,21 @@ class Controller():
     """
 
     def __init__(self, action_name, method_args, logger, response):
+        self.init_before()
+
         self.action_name = action_name
         self.logger = logger
 
         self._response = response
         self._method_args = method_args
+
+        self.init_after()
+
+    def init_before(self):
+        pass
+
+    def init_after(self):
+        pass
 
     def start(self):
         return self.run()
