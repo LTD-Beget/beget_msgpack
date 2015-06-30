@@ -1,5 +1,2 @@
 # Need for request
 git+https://github.com/LTD-Beget/msgpack-rpc-python
-
-# Need for server
-git+https://github.com/LTD-Beget/py-prefork-server.git

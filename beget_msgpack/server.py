@@ -2,31 +2,70 @@
 
 import traceback
 
-import preforkserver as pfs
-
 from .handler import Handler
 from .lib.logger import Logger
 
+import SocketServer
+
+import socket
+import os
+
+
+class VendorServer(SocketServer.ForkingTCPServer, object):
+
+    def __init__(self, server_address, request_handler_class, bind_and_activate=True,
+                 child_kwargs=None, max_servers=5, timeout_receive=30, request_queue_size=30):
+
+        self.child_kwargs = child_kwargs if child_kwargs is not None else {}
+        self.timeout_receive = timeout_receive
+        self.request_queue_size = request_queue_size
+        self.max_children = max_servers
+
+        super(VendorServer, self).__init__(server_address, request_handler_class, bind_and_activate)
+
+    def server_bind(self):
+        try:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except:
+            pass
+        self.allow_reuse_address = True
+        super(VendorServer, self).server_bind()
+
+    def process_request(self, request, client_address):
+        """Fork a new subprocess to process the request."""
+        self.collect_children()
+        pid = os.fork()
+        if pid:
+            # Parent process
+            if self.active_children is None:
+                self.active_children = set()
+            self.active_children.add(pid)
+            self.close_request(request)  #close handle in parent process
+            return
+        else:
+            # Child process.
+            # This must never return, hence os._exit()!
+            try:
+                self.socket.close()  # children don't need server-listening socket
+                self.RequestHandlerClass(request, client_address, self, **self.child_kwargs)
+                self.shutdown_request(request)
+                os._exit(0)
+            except:
+                try:
+                    self.handle_error(request, client_address)
+                    self.shutdown_request(request)
+                finally:
+                    os._exit(1)
+
 
 class Server():
-    """
-    Сервер - обертка для preforkserver. Кодирование - msgpack.
-    """
 
-    def __init__(self, host, port, controllers_prefix, max_servers=20, min_servers=5, min_spare_servers=2,
-                 max_spare_servers=10, reuse_port=True, timeout_receive=5, logger_name=None):
+    def __init__(self, host, port, controllers_prefix, max_servers=5, timeout_receive=5, logger_name=None):
         self.logger = Logger.get_logger(logger_name)
         self.controllers_prefix = controllers_prefix
-
         self.host = str(host)
         self.port = int(port)
-
         self.max_servers = max_servers
-        self.min_servers = min_servers
-        self.min_spare_servers = min_spare_servers
-        self.max_spare_servers = max_spare_servers
-
-        self.reuse_port = reuse_port
         self.timeout_receive = timeout_receive
 
     def start(self):
@@ -38,10 +77,8 @@ class Server():
                 'timeout_receive': self.timeout_receive
             }
 
-            manager = pfs.Manager(Handler, port=self.port, bind_ip=self.host, child_kwargs=child_kwargs,
-                                  max_servers=self.max_servers, min_servers=self.min_servers,
-                                  min_spare_servers=self.min_spare_servers, max_spare_servers=self.max_spare_servers,
-                                  reuse_port=self.reuse_port)
-            manager.run()
+            manager = VendorServer((self.host, self.port), Handler, child_kwargs=child_kwargs,
+                                   max_servers=self.max_servers, timeout_receive=self.timeout_receive)
+            manager.serve_forever()
         except Exception as e:
             self.logger.error('Server: get exception: %s\n traceback: %s', e.message, traceback.format_exc())
