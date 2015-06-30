@@ -7,39 +7,38 @@ import traceback
 import msgpack
 import time
 
-import preforkserver as pfs
-
 from .lib.logger import Logger
 from .lib.response import Response
 from .lib.errors.error_constructor import ErrorConstructor
 
+import SocketServer
 
-class Handler(pfs.BaseChild):
+
+class Handler(SocketServer.BaseRequestHandler, object):
     """
-    Класс который обслуживает коннект. Является форком по средством prefork библиотеки
+    Обработчик запроса. Каждый запрос форкается и запускает этот класс.
     """
 
-    def initialize(self, controllers_prefix, timeout_receive=5):
-        """
-        Кастомный __init__ от библиотеки prefork
-        """
+    def __init__(self, request, client_address, server,
+                 controllers_prefix, timeout_receive=5):
+
         self.controllers_prefix = controllers_prefix
         self.logger = Logger.get_logger()
         self.packer = msgpack.Packer(default=lambda x: x.to_msgpack())
         self.unpacker = msgpack.Unpacker()
         self.response = Response()
         self.timeout_receive = timeout_receive
+        self.time_start = None
 
-    def process_request(self):
-        """
-        Обработчик запроса (когда происходит передача данных на сервер)
-        """
+        super(Handler, self).__init__(request, client_address, server)
 
-        time_start = time.time()
+    def setup(self):
+        self.time_start = time.time()
 
         if hasattr(self.logger, 'request_id_generate') and callable(self.logger.request_id_generate):
             self.logger.request_id_generate()
 
+    def handle(self):
         try:
             # Получаем все данные из сокета
             message = ''
@@ -47,9 +46,9 @@ class Handler(pfs.BaseChild):
             while True:
 
                 # Устанавливаем таймаут на получение данных из сокета
-                ready = select.select([self.conn], [], [], self.timeout_receive)
+                ready = select.select([self.request], [], [], self.timeout_receive)
                 if ready[0]:
-                    data_buffer = self.conn.recv(4096)
+                    data_buffer = self.request.recv(4096)
                 else:
                     raise Exception('Exceeded timeout')
 
@@ -69,11 +68,11 @@ class Handler(pfs.BaseChild):
             self.on_message(message)
 
         except Exception as e:
-            #Выброс ошибки выше, влечен проблемы с воркерами
             self.logger.error('Handler: get Exception: %s\n  Traceback: %s', e.message, traceback.format_exc())
 
+    def finish(self):
         time_end = time.time()
-        self.logger.debug('Request completed in seconds: %s', time_end - time_start)
+        self.logger.debug('Request completed in seconds: %s', time_end - self.time_start)
 
         if hasattr(self.logger, 'request_id_clear') and callable(self.logger.request_id_clear):
             self.logger.request_id_clear()
@@ -87,7 +86,7 @@ class Handler(pfs.BaseChild):
         result = front_controller.run_controller(arguments)
 
         result_encoded = self.packer.pack([1, 0, None, result])
-        self.conn.sendall(result_encoded)
+        self.request.sendall(result_encoded)
 
     def log(self, msg):
         if hasattr(self, 'logger'):
