@@ -179,6 +179,8 @@ class Record(object):
                 if e[0] == errno.EAGAIN:
                     select.select([sock], [], [])
                     continue
+                if e[0] == errno.EINTR:
+                    continue
                 else:
                     raise
             if not data: # EOF
@@ -235,6 +237,8 @@ class Record(object):
             except socket.error, e:
                 if e[0] == errno.EAGAIN:
                     select.select([], [sock], [])
+                    continue
+                if e[0] == errno.EINTR:
                     continue
                 else:
                     raise
