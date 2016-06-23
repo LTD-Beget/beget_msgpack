@@ -80,7 +80,7 @@ class Handler(SocketServer.BaseRequestHandler, object):
     def on_message(self, message):
         route = message[2]
         arguments = message[3][0]
-        if  len(message) >= 4 and message[4]:
+        if  len(message) > 4 and message[4]:
             LoggerAdapterRequestId.static_global_request_id = message[4]
 
         self.logger.debug('Handler: \n  Route: %s\n  Arguments: %s', repr(route), repr(arguments))
