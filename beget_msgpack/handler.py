@@ -7,7 +7,7 @@ import traceback
 import msgpack
 import time
 
-from .lib.logger import Logger
+from .lib.logger import Logger, LoggerAdapterRequestId
 from .lib.response import Response
 from .lib.errors.error_constructor import ErrorConstructor
 
@@ -80,6 +80,9 @@ class Handler(SocketServer.BaseRequestHandler, object):
     def on_message(self, message):
         route = message[2]
         arguments = message[3][0]
+        if message[4]:
+            LoggerAdapterRequestId.static_global_request_id = message[4]
+
         self.logger.debug('Handler: \n  Route: %s\n  Arguments: %s', repr(route), repr(arguments))
 
         front_controller = FrontController(route, self.controllers_prefix, self.logger)

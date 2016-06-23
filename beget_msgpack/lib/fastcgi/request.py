@@ -52,6 +52,7 @@ class Request(object):
             "r": "%s/%s" % (controller_name, action_name)
         }
         post_params = {'secret': self.secret,
+                       'globalReqId': self.logger.static_global_request_id,
                        'inputData': base64.b64encode(msgpack.packb(kwargs))}
         content = urllib.urlencode(post_params)
         params = self._get_cgi_params(q_params, len(content))
